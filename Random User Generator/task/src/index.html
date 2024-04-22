@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Hello, World!</title>
+    <style>
+        h1 {
+            text-align: center;
+            border-bottom: 3px dotted gray;
+        }
+        h3 {
+            text-align: center;
+            margin-top: 20px;
+            color: blueviolet;
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+        }
+        button {
+            margin: 0 auto;
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 16px;
+            color: white;
+            background-color: #4CAF50;
+            cursor: pointer;
+        }
+        .users {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .user {
+            max-width: 400px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px;
+            padding: 10px;
+            border: 1px solid gray;
+            border-radius: 5px;
+            align-items: center;
+        }
+        @media (min-width: 400px) {
+            .users {
+                flex-direction: row;
+            }
+        }
+        .info {
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: column;
+        }
+        .user img {
+            order: -1;
+        }
+    </style>
+</head>
+<body>
+<h1>Random User Generator</h1>
+<div class="buttons">
+    <button id="get-user-button" onclick="randomuser()">Get User</button>
+    <button id="save-users-button" onclick="saveUsers()">Save Users</button>
+</div>
+<div class="users"></div>
+<script>
+    const users = [];
+
+    window.addEventListener("load", () => {
+        let savedUsers = window.localStorage.getItem('users');
+        if (savedUsers) {
+            savedUsers = JSON.parse(savedUsers);
+            savedUsers.forEach((user) => {
+                addUserElement(user, true);
+            });
+        }
+    });
+
+    function saveUsers() {
+        window.localStorage.setItem('users', JSON.stringify(users));
+        users.forEach((user) => {
+            addUserElement(user, true);
+        });
+    }
+
+    function addUserElement(json, saved) {
+        const birthday = new Date(json.results[0].dob.date);
+
+        const userDiv = document.createElement('div');
+        userDiv.className = 'user';
+        if (saved) {
+            userDiv.className += ' saved';
+            const savedHeader = document.createElement('h3');
+            savedHeader.innerText = 'Saved Users';
+            document.querySelector('.users').appendChild(savedHeader);
+        }
+        const info = document.createElement('div');
+        info.className = 'info';
+        const nameH2 = document.createElement('h2');
+        nameH2.className = 'name';
+        nameH2.innerText = json.results[0].name.first + ' ' + json.results[0].name.last;
+        info.appendChild(nameH2);
+        ['email', 'password', 'gender', 'phone'].forEach((key) => {
+            const p = document.createElement('p');
+            p.className = key;
+            p.innerText = key.charAt(0).toUpperCase() + key.slice(1) + ': ' + json.results[0][key];
+            info.appendChild(p);
+        });
+        const locationP = document.createElement('p');
+        locationP.className = 'location';
+        locationP.innerText = 'Location: ' + json.results[0].location.city;
+        info.appendChild(locationP);
+        const birthdayP = document.createElement('p');
+        birthdayP.className = 'birthday';
+        birthdayP.innerText = 'Birthday: ' + birthday.toLocaleDateString('en-GB');
+        info.appendChild(birthdayP);
+        userDiv.appendChild(info);
+
+        const photoI = document.createElement('img');
+        photoI.className = 'photo';
+        photoI.src = json.results[0].picture.large;
+        photoI.alt = 'thumbnail';
+        userDiv.appendChild(photoI);
+
+        document.querySelector('.users').appendChild(userDiv);
+    }
+
+    async function randomuser() {
+        const res = await fetch('https://randomuser.me/api/');
+        const json = await res.json();
+        addUserElement(json, false);
+        users.push(json);
+    }
+
+    randomuser();
+</script>
+</body>
+</html>
